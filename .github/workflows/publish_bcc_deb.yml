@@ -35,15 +35,15 @@ jobs:
           # virtual llvm-dev package.
           # https://github.com/iovisor/bcc/issues/492
           sudo ln -s /usr/lib/llvm-11 /usr/local/llvm
-          /usr/lib/pbuilder/pbuilder-satisfydepends
-          ./scripts/build-deb.sh 
-          tar czvf bcc_${BCC_TAG}.tar.gz *.deb
+          sudo /usr/lib/pbuilder/pbuilder-satisfydepends
+          sudo ./scripts/build-deb.sh 
+          sudo tar czvf /tmp/bcc_${BCC_TAG}.tar.gz *.deb
     - name: upload bcc deb artifact
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bcc_*.tar.gz
+        asset_path: /tmp/bcc_*.tar.gz
         asset_name: bcc.linux-amd64.tar.gz
         asset_content_type: application/gzip
