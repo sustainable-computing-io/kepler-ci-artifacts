@@ -1,0 +1,49 @@
+name: Unit test
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+permissions:
+  pull-requests: write
+  contents: write
+  repository-projects: write
+
+jobs:
+  publich_bcc_deb:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - name: Build bcc
+      run: |
+          set -x
+          export BCC_TAG=$(cat bcc_tag)
+          sudo apt-get update
+          # Use release 9 of llvm etc. - later versions have an unfixed
+          # bug on Ubuntu:
+          # https://github.com/iovisor/bcc/issues/2915
+          sudo apt-get update
+          sudo apt-get -y install tar pbuilder aptitude bison build-essential cmake flex git libelf-dev libfl-dev libedit-dev libllvm11 llvm-11-dev libclang-cpp11-dev libclang-common-11-dev libclang1-11 libclang-11-dev python zlib1g-dev
+          git clone --depth 1 --branch ${BCC_TAG} https://github.com/iovisor/bcc.git
+          cd bcc
+          # Symlink /usr/lib/llvm to avoid "Unable to find clang libraries"
+          # The directory appears only to be created when installing the
+          # virtual llvm-dev package.
+          # https://github.com/iovisor/bcc/issues/492
+          sudo ln -s /usr/lib/llvm-11 /usr/local/llvm
+          /usr/lib/pbuilder/pbuilder-satisfydepends
+          ./scripts/build-deb.sh 
+          tar czvf bcc_${BCC_TAG}.tar.gz *.deb
+    - name: upload bcc deb artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bcc_*.tar.gz
+        asset_name: bcc.linux-amd64.tar.gz
+        asset_content_type: application/gzip
