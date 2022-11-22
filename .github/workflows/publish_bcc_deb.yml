@@ -39,7 +39,7 @@ jobs:
           sudo ./scripts/build-deb.sh 
           sudo tar czvf /tmp/bcc_${BCC_TAG}.tar.gz *.deb
     - name: upload bcc deb artifact
-      ses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v2
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
