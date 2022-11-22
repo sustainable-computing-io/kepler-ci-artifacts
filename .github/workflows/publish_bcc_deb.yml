@@ -39,11 +39,9 @@ jobs:
           sudo ./scripts/build-deb.sh 
           sudo tar czvf /tmp/bcc_${BCC_TAG}.tar.gz *.deb
     - name: upload bcc deb artifact
-      uses: actions/upload-release-asset@v1
+      ses: actions/upload-artifact@v2
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: /tmp/bcc_*.tar.gz
-        asset_name: bcc.linux-amd64.tar.gz
-        asset_content_type: application/gzip
+        name: bcc.linux-amd64.tar.gz
+        path: /tmp/bcc_*.tar.gz
