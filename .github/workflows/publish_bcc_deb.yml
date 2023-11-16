@@ -12,7 +12,7 @@ permissions:
   repository-projects: write
 
 jobs:
-  publich_bcc_deb:
+  publich_pkg:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -39,6 +39,16 @@ jobs:
           sudo /usr/lib/pbuilder/pbuilder-satisfydepends
           sudo ./scripts/build-deb.sh 
           sudo tar czvf /tmp/bcc_${BCC_TAG}.tar.gz *.deb
+    - name: Build xgboost
+      run: |
+          set -x
+          export XGBOOST_TAG=$(cat xgboost_tag)
+          sudo apt-get update -y
+          # ubuntu 20.04 ships with cmake 3.16, but xgboost needs 3.18+. Install cmake from pip
+          sudo apt-get install git make g++ python3-pip -y
+          sudo pip install cmake --upgrade
+          git clone --recursive https://github.com/dmlc/xgboost.git
+          cd xgboost && git checkout tags/v${XGBOOST_TAG} && mkdir -p build && cd build && cmake .. && make -j4 && make package && sudo tar czvf /tmp/xgboost-${XGBOOST_TAG}-Linux.sh.tar.gz xgboost-${XGBOOST_TAG}-Linux.sh
     #- name: upload bcc deb artifact
     #  uses: actions/upload-artifact@v2
     #  env:
@@ -53,3 +63,4 @@ jobs:
           files: |
             bcc.linux-amd64.tar.gz
             /tmp/bcc_*.tar.gz
+            /tmp/xgboost-*.tar.gz
